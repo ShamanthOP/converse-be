@@ -1,11 +1,12 @@
 const userSchema = `
-    type User {
+    type SearchedUser {
         id: String,
         username: String
+        image: String
     }
 
     type Query {
-        searchUser(username: String): User
+        searchUsers(username: String): [SearchedUser]
     }
 
     type CreateUsernameResponse {
