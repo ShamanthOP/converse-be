@@ -8,6 +8,8 @@ import schema from "./graphql/schema";
 import resolvers from "./graphql/resolvers";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
+import { getServerSession } from "./utils/functions";
+import { GraphQLContext } from "./utils/types";
 
 dotenv.config();
 
@@ -36,7 +38,12 @@ const startServer = async () => {
         "/graphql",
         cors<cors.CorsRequest>(corsOptions),
         express.json(),
-        expressMiddleware(server)
+        expressMiddleware(server, {
+            context: async ({ req, res }): Promise<GraphQLContext> => {
+                const session = await getServerSession(req.headers.cookie);
+                return { session };
+            },
+        })
     );
 
     await new Promise<void>((resolve) =>
