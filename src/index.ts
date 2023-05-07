@@ -10,6 +10,7 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
 import { getServerSession } from "./utils/functions";
 import { GraphQLContext } from "./utils/types";
+import { PrismaClient } from "@prisma/client";
 
 dotenv.config();
 
@@ -32,6 +33,8 @@ const corsOptions = {
     credentials: true,
 };
 
+const prisma = new PrismaClient();
+
 const startServer = async () => {
     await server.start();
     app.use(
@@ -41,7 +44,7 @@ const startServer = async () => {
         expressMiddleware(server, {
             context: async ({ req, res }): Promise<GraphQLContext> => {
                 const session = await getServerSession(req.headers.cookie);
-                return { session };
+                return { session, prisma };
             },
         })
     );

@@ -12,6 +12,7 @@
     "dependencies": {
         "@apollo/server": "^4.7.1",
         "@graphql-tools/schema": "^9.0.19",
+        "@prisma/client": "^4.13.0",
         "cors": "^2.8.5",
         "cross-fetch": "^3.1.5",
         "dotenv": "^16.0.3",
@@ -25,6 +26,7 @@
         "@types/cors": "^2.8.13",
         "@types/lodash.merge": "^4.6.7",
         "nodemon": "^2.0.22",
+        "prisma": "^4.13.0",
         "typescript": "^5.0.4"
     }
 }
