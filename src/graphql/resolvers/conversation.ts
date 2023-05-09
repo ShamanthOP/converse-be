@@ -3,6 +3,30 @@ import { GraphQLContext } from "../../utils/types";
 import { Prisma } from "@prisma/client";
 
 const conversationResolver = {
+    Query: {
+        conversations: async (_: any, __: any, context: GraphQLContext) => {
+            console.log("Conversations query");
+            const { session, prisma } = context;
+
+            if (!session?.user) {
+                throw new GraphQLError("Not authorized");
+            }
+            const {
+                user: { id: userId },
+            } = session;
+            try {
+                const conversations = await prisma.conversation.findMany({
+                    include: conversationPopulated,
+                });
+                return conversations.filter((conversation) =>
+                    conversation.participants.find((p) => p.userId === userId)
+                );
+            } catch (e: any) {
+                console.log("conversations Query Error", e);
+                throw new GraphQLError(e?.message);
+            }
+        },
+    },
     Mutation: {
         createConversation: async (
             _: any,

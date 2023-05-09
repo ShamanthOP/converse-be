@@ -5,6 +5,15 @@ const userSchema = `
         image: String
     }
 
+    type User {
+        id: String
+        name: String
+        username: String
+        email: String
+        emailVerified: String
+        image: String
+    }
+
     type Query {
         searchUsers(username: String): [SearchedUser]
     }
