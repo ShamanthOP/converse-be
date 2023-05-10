@@ -74,6 +74,7 @@ export const participantPopulated =
             select: {
                 id: true,
                 username: true,
+                image: true,
             },
         },
     });

@@ -9,8 +9,11 @@ import resolvers from "./graphql/resolvers";
 import { makeExecutableSchema } from "@graphql-tools/schema";
 import * as dotenv from "dotenv";
 import { getServerSession } from "./utils/functions";
-import { GraphQLContext } from "./utils/types";
+import { GraphQLContext, SubscriptionContext } from "./utils/types";
 import { PrismaClient } from "@prisma/client";
+import { WebSocketServer } from "ws";
+import { useServer } from "graphql-ws/lib/use/ws";
+import { PubSub } from "graphql-subscriptions";
 
 dotenv.config();
 
@@ -21,19 +24,50 @@ const port = Number(process.env.PORT ?? 4000);
 
 const executableSchema = makeExecutableSchema({ typeDefs: schema, resolvers });
 
-const server = new ApolloServer({
-    schema: executableSchema,
-    csrfPrevention: true,
-    cache: "bounded",
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
-});
-
 const corsOptions = {
     origin: process.env.CLIENT_ORIGIN,
     credentials: true,
 };
 
 const prisma = new PrismaClient();
+const pubsub = new PubSub();
+
+const wsServer = new WebSocketServer({
+    server: httpServer,
+    path: "/graphql/subscriptions",
+});
+
+const serverCleanup = useServer(
+    {
+        schema: executableSchema,
+        context: async (ctx: SubscriptionContext): Promise<GraphQLContext> => {
+            if (ctx.connectionParams && ctx.connectionParams.session) {
+                const { session } = ctx.connectionParams;
+                return { session, prisma, pubsub };
+            }
+            return { session: null, prisma, pubsub };
+        },
+    },
+    wsServer
+);
+
+const server = new ApolloServer({
+    schema: executableSchema,
+    csrfPrevention: true,
+    cache: "bounded",
+    plugins: [
+        ApolloServerPluginDrainHttpServer({ httpServer }),
+        {
+            async serverWillStart() {
+                return {
+                    async drainServer() {
+                        await serverCleanup.dispose();
+                    },
+                };
+            },
+        },
+    ],
+});
 
 const startServer = async () => {
     await server.start();
@@ -44,7 +78,7 @@ const startServer = async () => {
         expressMiddleware(server, {
             context: async ({ req, res }): Promise<GraphQLContext> => {
                 const session = await getServerSession(req.headers.cookie);
-                return { session, prisma };
+                return { session, prisma, pubsub };
             },
         })
     );

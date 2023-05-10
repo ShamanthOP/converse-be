@@ -9,6 +9,10 @@ const conversationSchema = `
         conversations: [Conversation]
     }
 
+    type Subscription {
+        conversationCreated: Conversation
+    }
+
     type Participant {
         id: String
         user: User
