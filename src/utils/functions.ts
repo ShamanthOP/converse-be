@@ -14,5 +14,5 @@ export const isUserInConversation = (
     participants: Array<ParticipantPopulated>,
     userId: string
 ): boolean => {
-    return !!participants.find((participant) => participant.id === userId);
+    return !!participants.find((participant) => participant.userId === userId);
 };

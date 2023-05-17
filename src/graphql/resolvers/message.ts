@@ -21,6 +21,7 @@ const messageResolver = {
             const { conversationId } = args;
 
             if (!session?.user) {
+                console.log("Messages messages query error");
                 throw new GraphQLError("Not authorized");
             }
             const {
@@ -42,6 +43,7 @@ const messageResolver = {
                 userId
             );
             if (!allowedToView) {
+                console.log("Messages messages not allowed error");
                 throw new GraphQLError("Not authorized");
             }
 
@@ -72,6 +74,7 @@ const messageResolver = {
             const { session, prisma, pubsub } = context;
 
             if (!session?.user) {
+                console.log("Messages sendMessage mutation error");
                 throw new GraphQLError("Not authorized");
             }
 
@@ -94,7 +97,19 @@ const messageResolver = {
                     },
                     include: messagePopulated,
                 });
-                const conversation = prisma.conversation.update({
+
+                const participant =
+                    await prisma.conversationParticipant.findFirst({
+                        where: {
+                            userId,
+                            conversationId,
+                        },
+                    });
+                if (!participant) {
+                    throw new GraphQLError("Participant does not exist");
+                }
+
+                const conversation = await prisma.conversation.update({
                     where: {
                         id: conversationId,
                     },
@@ -103,7 +118,7 @@ const messageResolver = {
                         participants: {
                             update: {
                                 where: {
-                                    id: senderId,
+                                    id: participant.id,
                                 },
                                 data: {
                                     hasSeenLastMessage: true,
@@ -121,6 +136,7 @@ const messageResolver = {
                             },
                         },
                     },
+                    include: conversationPopulated,
                 });
 
                 pubsub.publish("MESSAGE_SENT", { messageSent: newMessage });

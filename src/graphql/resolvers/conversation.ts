@@ -9,10 +9,10 @@ import { withFilter } from "graphql-subscriptions";
 const conversationResolver = {
     Query: {
         conversations: async (_: any, __: any, context: GraphQLContext) => {
-            console.log("Conversations query");
             const { session, prisma } = context;
 
             if (!session?.user) {
+                console.log("Conversations query error");
                 throw new GraphQLError("Not authorized");
             }
             const {
@@ -42,6 +42,7 @@ const conversationResolver = {
             const { session, prisma, pubsub } = context;
 
             if (!session?.user) {
+                console.log("Conversations Mutation error");
                 throw new GraphQLError("Not authorized");
             }
             const {

@@ -7,7 +7,7 @@ const messageSchema = `
     }
 
     type Query {
-        messages(conversationId: String): [Message]
+        messages(conversationId: String!): [Message]
     }
 
     type Mutation {
