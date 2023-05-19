@@ -4,6 +4,7 @@ const conversationSchema = `
     type Mutation {
         createConversation(participantIds: [String]): CreateConversationResponse
         markConversationAsRead(userId: String!, conversationId: String!): Boolean
+        deleteConversation(conversationId: String!): Boolean
     }
 
     type Query {
@@ -12,6 +13,8 @@ const conversationSchema = `
 
     type Subscription {
         conversationCreated: Conversation
+        conversationUpdated: Conversation
+        conversationDeleted: ConversationDeletedPayload
     }
 
     type Participant {
@@ -30,6 +33,10 @@ const conversationSchema = `
 
     type CreateConversationResponse {
         conversationId: String
+    }
+
+    type ConversationDeletedPayload {
+        id: String
     }
 `;
 
