@@ -14,7 +14,7 @@ const conversationSchema = `
     type Subscription {
         conversationCreated: Conversation
         conversationUpdated: Conversation
-        conversationDeleted: ConversationDeletedPayload
+        conversationDeleted: ConversationDeletedResponse
     }
 
     type Participant {
@@ -35,8 +35,9 @@ const conversationSchema = `
         conversationId: String
     }
 
-    type ConversationDeletedPayload {
+    type ConversationDeletedResponse {
         id: String
+        participants: [Participant]
     }
 `;
 

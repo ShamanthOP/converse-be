@@ -63,8 +63,13 @@ export interface ConversationUpdatedSubsriptionPayload {
     conversationUpdated: ConversationPopulated;
 }
 
+export interface ConversationDeletedPayload {
+    id: string;
+    participants: Array<ParticipantPopulated>;
+}
+
 export interface ConversationDeletedSubsriptionPayload {
-    conversationDeleted: ConversationPopulated;
+    conversationDeleted: ConversationDeletedPayload;
 }
 
 /*

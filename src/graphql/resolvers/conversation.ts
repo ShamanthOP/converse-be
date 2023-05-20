@@ -132,7 +132,14 @@ const conversationResolver = {
             }
 
             try {
-                const [deleteConversation] = await prisma.$transaction([
+                const conversation = await prisma.conversation.findFirst({
+                    where: {
+                        id: conversationId,
+                    },
+                    include: conversationPopulated,
+                });
+                const participants = conversation?.participants;
+                const [deletedConversation] = await prisma.$transaction([
                     prisma.conversation.delete({
                         where: {
                             id: conversationId,
@@ -151,7 +158,7 @@ const conversationResolver = {
                 ]);
 
                 pubsub.publish("CONVERSATION_DELETED", {
-                    conversationDeleted: deleteConversation,
+                    conversationDeleted: { id: conversationId, participants },
                 });
             } catch (e: any) {
                 console.log("deleteConversation Mutation Error", e);
@@ -219,11 +226,11 @@ const conversationResolver = {
                     const { pubsub } = context;
                     return pubsub.asyncIterator("CONVERSATION_DELETED");
                 },
-                (
+                async (
                     payload: ConversationDeletedSubsriptionPayload,
                     _: any,
                     context: GraphQLContext
-                ) => {
+                ): Promise<boolean> => {
                     const { session } = context;
                     if (!session?.user) {
                         throw new GraphQLError("Not authorized");
@@ -233,7 +240,7 @@ const conversationResolver = {
                     const {
                         conversationDeleted: { participants },
                     } = payload;
-                    return isUserInConversation(participants, session.user.id);
+                    return isUserInConversation(participants!, userId);
                 }
             ),
         },
