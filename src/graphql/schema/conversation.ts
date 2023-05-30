@@ -1,19 +1,20 @@
 const conversationSchema = `
     scalar Date
+    
+    type Query {
+        conversations: [Conversation]
+    }
 
     type Mutation {
         createConversation(participantIds: [String]): CreateConversationResponse
         markConversationAsRead(userId: String!, conversationId: String!): Boolean
         deleteConversation(conversationId: String!): Boolean
-    }
-
-    type Query {
-        conversations: [Conversation]
+        updateParticipants(conversationId: String!, participantIds: [String]!): Boolean
     }
 
     type Subscription {
         conversationCreated: Conversation
-        conversationUpdated: Conversation
+        conversationUpdated: ConversationUpdatedResponse
         conversationDeleted: ConversationDeletedResponse
     }
 
@@ -38,6 +39,12 @@ const conversationSchema = `
     type ConversationDeletedResponse {
         id: String
         participants: [Participant]
+    }
+
+    type ConversationUpdatedResponse {
+        conversation: Conversation
+        addedUserIds: [String]
+        removedUserIds: [String]
     }
 `;
 

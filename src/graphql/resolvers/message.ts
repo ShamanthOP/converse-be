@@ -1,8 +1,8 @@
 import { GraphQLError } from "graphql";
 import {
     GraphQLContext,
-    MessaegSentSubsriptionPayload,
     MessagePopulated,
+    MessageSentSubsriptionPayload,
     SendMessageArguments,
 } from "../../utils/types";
 import { Prisma } from "@prisma/client";
@@ -58,6 +58,8 @@ const messageResolver = {
                     },
                 });
 
+                console.log("INSIDE MESSAGES", conversationId);
+
                 return messages;
             } catch (e: any) {
                 console.log("messages Query Error", e);
@@ -88,16 +90,6 @@ const messageResolver = {
             }
 
             try {
-                const newMessage = await prisma.message.create({
-                    data: {
-                        id: messageId,
-                        body,
-                        senderId,
-                        conversationId,
-                    },
-                    include: messagePopulated,
-                });
-
                 const participant =
                     await prisma.conversationParticipant.findFirst({
                         where: {
@@ -108,6 +100,16 @@ const messageResolver = {
                 if (!participant) {
                     throw new GraphQLError("Participant does not exist");
                 }
+
+                const newMessage = await prisma.message.create({
+                    data: {
+                        id: messageId,
+                        body,
+                        senderId,
+                        conversationId,
+                    },
+                    include: messagePopulated,
+                });
 
                 const conversation = await prisma.conversation.update({
                     where: {
@@ -159,7 +161,7 @@ const messageResolver = {
                     return pubsub.asyncIterator(["MESSAGE_SENT"]);
                 },
                 (
-                    payload: MessaegSentSubsriptionPayload,
+                    payload: MessageSentSubsriptionPayload,
                     args: { conversationId: string }
                 ) => {
                     return (

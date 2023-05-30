@@ -167,6 +167,96 @@ const conversationResolver = {
 
             return true;
         },
+        updateParticipants: async (
+            _: any,
+            args: { conversationId: string; participantIds: Array<string> },
+            context: GraphQLContext
+        ): Promise<boolean> => {
+            const { session, prisma, pubsub } = context;
+            const { conversationId, participantIds } = args;
+            if (!session?.user) {
+                throw new GraphQLError("Not authorized");
+            }
+
+            const {
+                user: { id: userId },
+            } = session;
+
+            try {
+                const participants =
+                    await prisma.conversationParticipant.findMany({
+                        where: {
+                            conversationId,
+                        },
+                    });
+
+                const existingPartcipants = participants.map((p) => p.userId);
+
+                const participantsToDelete = existingPartcipants.filter(
+                    (id) => !participantIds.includes(id)
+                );
+                const participantsToAdd = participantIds.filter(
+                    (id) => !existingPartcipants.includes(id)
+                );
+
+                const transactionStatements = [
+                    prisma.conversation.update({
+                        where: {
+                            id: conversationId,
+                        },
+                        data: {
+                            participants: {
+                                deleteMany: {
+                                    userId: {
+                                        in: participantsToDelete,
+                                    },
+                                    conversationId,
+                                },
+                            },
+                        },
+                        include: conversationPopulated,
+                    }),
+                ];
+
+                if (participantsToAdd.length) {
+                    transactionStatements.push(
+                        prisma.conversation.update({
+                            where: {
+                                id: conversationId,
+                            },
+                            data: {
+                                participants: {
+                                    createMany: {
+                                        data: participantsToAdd.map((id) => ({
+                                            userId: id,
+                                            hasSeenLastMessage: true,
+                                        })),
+                                    },
+                                },
+                            },
+                            include: conversationPopulated,
+                        })
+                    );
+                }
+
+                const [deleteUpdate, addUpdate] = await prisma.$transaction(
+                    transactionStatements
+                );
+
+                pubsub.publish("CONVERSATION_UPDATED", {
+                    conversationUpdated: {
+                        conversation: addUpdate || deleteUpdate,
+                        addedUserIds: participantsToAdd,
+                        removedUserIds: participantsToDelete,
+                    },
+                });
+            } catch (e: any) {
+                console.log("updatePartcicpants Mutation Error", e);
+                throw new GraphQLError("Error updating conversation");
+            }
+
+            return true;
+        },
     },
     Subscription: {
         conversationCreated: {
@@ -212,11 +302,33 @@ const conversationResolver = {
                     if (!session?.user) {
                         throw new GraphQLError("Not authorized");
                     }
-                    console.log("Conversation Updated subscription", payload);
                     const {
-                        conversationUpdated: { participants },
+                        user: { id: userId },
+                    } = session;
+                    const {
+                        conversationUpdated: {
+                            conversation: { participants },
+                            addedUserIds,
+                            removedUserIds,
+                        },
                     } = payload;
-                    return isUserInConversation(participants, session.user.id);
+
+                    const userIsParticipant = isUserInConversation(
+                        participants,
+                        session.user.id
+                    );
+                    const userSentLastMessage =
+                        payload.conversationUpdated.conversation.latestMessage
+                            ?.senderId === userId;
+                    const userIsBeingRemoved =
+                        removedUserIds &&
+                        !!removedUserIds.find((id) => id === userId);
+
+                    return (
+                        userSentLastMessage ||
+                        userIsBeingRemoved ||
+                        (userIsParticipant && !userSentLastMessage)
+                    );
                 }
             ),
         },

@@ -60,7 +60,11 @@ export interface ConversationCreatedSubsriptionPayload {
 }
 
 export interface ConversationUpdatedSubsriptionPayload {
-    conversationUpdated: ConversationPopulated;
+    conversationUpdated: {
+        conversation: ConversationPopulated;
+        addedUserIds: Array<string>;
+        removedUserIds: Array<string>;
+    };
 }
 
 export interface ConversationDeletedPayload {
@@ -86,6 +90,6 @@ export type MessagePopulated = Prisma.MessageGetPayload<{
     include: typeof messagePopulated;
 }>;
 
-export interface MessaegSentSubsriptionPayload {
+export interface MessageSentSubsriptionPayload {
     messageSent: MessagePopulated;
 }
