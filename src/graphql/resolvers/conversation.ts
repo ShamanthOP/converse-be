@@ -15,7 +15,6 @@ const conversationResolver = {
             const { session, prisma } = context;
 
             if (!session?.user) {
-                console.log("Conversations query error");
                 throw new GraphQLError("Not authorized");
             }
             const {
@@ -45,7 +44,6 @@ const conversationResolver = {
             const { session, prisma, pubsub } = context;
 
             if (!session?.user) {
-                console.log("Conversations Mutation error");
                 throw new GraphQLError("Not authorized");
             }
             const {
@@ -71,7 +69,7 @@ const conversationResolver = {
                 });
 
                 pubsub.publish("CONVERSATION_UPDATED", {
-                    conversationUpdated: conversation,
+                    conversationUpdated: { conversation },
                 });
 
                 return {
@@ -89,7 +87,6 @@ const conversationResolver = {
         ): Promise<boolean> => {
             const { session, prisma } = context;
             if (!session?.user) {
-                console.log("Conversations Mutation error");
                 throw new GraphQLError("Not authorized");
             }
 
@@ -242,6 +239,9 @@ const conversationResolver = {
                 const [deleteUpdate, addUpdate] = await prisma.$transaction(
                     transactionStatements
                 );
+
+                console.log("DeleteUpdate", deleteUpdate);
+                console.log("Addupdate", addUpdate);
 
                 pubsub.publish("CONVERSATION_UPDATED", {
                     conversationUpdated: {

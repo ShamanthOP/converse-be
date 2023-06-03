@@ -21,7 +21,6 @@ const messageResolver = {
             const { conversationId } = args;
 
             if (!session?.user) {
-                console.log("Messages messages query error");
                 throw new GraphQLError("Not authorized");
             }
             const {
@@ -43,7 +42,6 @@ const messageResolver = {
                 userId
             );
             if (!allowedToView) {
-                console.log("Messages messages not allowed error");
                 throw new GraphQLError("Not authorized");
             }
 
@@ -57,8 +55,6 @@ const messageResolver = {
                         createdAt: "desc",
                     },
                 });
-
-                console.log("INSIDE MESSAGES", conversationId);
 
                 return messages;
             } catch (e: any) {
@@ -143,7 +139,7 @@ const messageResolver = {
 
                 pubsub.publish("MESSAGE_SENT", { messageSent: newMessage });
                 pubsub.publish("CONVERSATION_UPDATED", {
-                    conversationUpdated: conversation,
+                    conversationUpdated: { conversation },
                 });
             } catch (e: any) {
                 console.log("sendMessage Mutation Error", e);

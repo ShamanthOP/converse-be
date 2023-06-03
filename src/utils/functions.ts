@@ -3,9 +3,13 @@ import { ParticipantPopulated } from "./types";
 
 export const getServerSession = async (cookie: string | undefined) => {
     if (!cookie) return null;
-    const res = await fetch("http://localhost:3000/api/auth/session", {
-        headers: { cookie: cookie },
-    });
+    const res = await fetch(
+        process.env.CLIENT_AUTH_ORIGIN ??
+            "http://localhost:3000/api/auth/session",
+        {
+            headers: { cookie: cookie },
+        }
+    );
     const session = await res.json();
     return session;
 };
