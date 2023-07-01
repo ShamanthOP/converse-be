@@ -77,6 +77,9 @@ const startServer = async () => {
         express.json(),
         expressMiddleware(server, {
             context: async ({ req, res }): Promise<GraphQLContext> => {
+                console.log("Request: ", req);
+                console.log("Request headers: ", req.headers);
+                console.log("Request cookie: ", req.headers.cookie);
                 const session = await getServerSession(req.headers.cookie);
                 return { session, prisma, pubsub };
             },
