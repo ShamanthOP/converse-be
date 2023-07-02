@@ -21,6 +21,20 @@ dotenv.config();
 const app = express();
 const httpServer = http.createServer(app);
 
+app.use((req: any, res: any, next: any) => {
+    res.setHeader("Access-Control-Allow-Origin", "*");
+    res.setHeader(
+        "Access-Control-Allow-Methods",
+        "GET, POST, PUT, DELETE, PATCH"
+    );
+    res.setHeader(
+        "Access-Control-Allow-Headers",
+        "Content-Type, Authorization"
+    );
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+    next();
+});
+
 const port = Number(process.env.PORT ?? 4000);
 
 const executableSchema = makeExecutableSchema({ typeDefs: schema, resolvers });
