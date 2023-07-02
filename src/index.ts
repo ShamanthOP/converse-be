@@ -14,6 +14,7 @@ import { PrismaClient } from "@prisma/client";
 import { WebSocketServer } from "ws";
 import { useServer } from "graphql-ws/lib/use/ws";
 import { PubSub } from "graphql-subscriptions";
+import cookieParser from "cookie-parser";
 
 dotenv.config();
 
@@ -69,17 +70,25 @@ const server = new ApolloServer({
     ],
 });
 
+const testmdl = (req, res, next) => {
+    console.log("DEBUG################", req.cookies);
+    console.log("DEBUG################________", req.headers.cookie);
+    next();
+};
+
 const startServer = async () => {
     await server.start();
     app.use(
         "/graphql",
+        cookieParser(),
         cors<cors.CorsRequest>(corsOptions),
         express.json(),
+        testmdl,
         expressMiddleware(server, {
             context: async ({ req, res }): Promise<GraphQLContext> => {
-                console.log("Request: ", req);
-                console.log("Request headers: ", req.headers);
-                console.log("Request cookie: ", req.headers.cookie);
+                // console.log("Request: ", req);
+                // console.log("Request headers: ", req.headers);
+                // console.log("Request cookie: ", req.headers.cookie);
                 const session = await getServerSession(req.headers.cookie);
                 return { session, prisma, pubsub };
             },
