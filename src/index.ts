@@ -70,7 +70,7 @@ const server = new ApolloServer({
     ],
 });
 
-const testmdl = (req, res, next) => {
+const testmdl = (req: any, res: any, next: any) => {
     console.log("DEBUG################", req.cookies);
     console.log("DEBUG################________", req.headers.cookie);
     next();
